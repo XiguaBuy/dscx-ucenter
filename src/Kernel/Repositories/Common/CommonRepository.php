@@ -3,6 +3,7 @@
 namespace App\Kernel\Repositories\Common;
 
 use App\Kernel\Repositories\Repository;
+use App\Models\Sms;
 use Illuminate\Support\Str;
 
 class CommonRepository extends Repository
@@ -93,6 +94,44 @@ class CommonRepository extends Repository
     }
 
     /**
+     * 创蓝短信
+     */
+    public function Chuanglan()
+    {
+        $sms = Sms::query()->where('code', 'chuanglan')->get();
+        $sms = $sms ? $sms->toArray() : [];
+
+        return $this->sms_list($sms);
+    }
+
+    /**
+     * 短信插件
+     *
+     * @param array $sms_list
+     */
+    public function sms_list($sms_list)
+    {
+        $list = [];
+        $code = [];
+
+        if (!empty($sms_list)) {
+            foreach ($sms_list as $key => $val) {
+                $sms_configure = unserialize($val['sms_configure']);
+                foreach ($sms_configure as $k => $v) {
+                    if ($v['type'] === 'text') {
+                        $val['config'][$v['name']] = $v['value'];
+                    }
+                }
+                $list[$val['id']] = $val;
+
+                $code[$val['code']] = $val['config'];
+            }
+        }
+
+        return ['data' => $list, 'code' => $code];
+    }
+
+    /**
      * 发送短信
      *
      * @param int $mobile 接收手机号码
@@ -102,37 +141,18 @@ class CommonRepository extends Repository
      * @return bool
      * @throws \Exception
      */
-    public function smsSend($mobile = 0, $content = '', $send_time = '', $msg = true)
+    public function smsSend($mobile = 0, $content = '', $send_time = '', $msg = true, $sms_list)
     {
-
-        $sms_type = ['ihuyi', 'alidayu', 'aliyun', 'dscsms', 'huawei'];
+        $sms_type = ['ihuyi', 'alidayu', 'aliyun', 'dscsms', 'huawei', 'chunlan'];
+        if (!empty($sms_list)) {
+            $sms_type = $sms_list['data'];
+        }
 
         $config = [
             'driver' => 'sms',
-            'driverConfig' => [
-                'sms_type' => $sms_type[$this->config['sms_type']], // 短信类型对应 $sms_type 数组索引
-                'ihuyi' => [
-                    'sms_name' => $this->config['sms_ecmoban_user'],
-                    'sms_password' => $this->config['sms_ecmoban_password']
-                ],
-                'alidayu' => [
-                    'ali_appkey' => $this->config['ali_appkey'],
-                    'ali_secretkey' => $this->config['ali_secretkey']
-                ],
-                'aliyun' => [
-                    'access_key_id' => $this->config['access_key_id'],
-                    'access_key_secret' => $this->config['access_key_secret']
-                ],
-                'dscsms' => [
-                    'app_key' => $this->config['dsc_appkey'],
-                    'app_secret' => $this->config['dsc_appsecret']
-                ],
-                'huawei' => [
-                    'app_key' => $this->config['huawei_sms_key'],
-                    'app_secret' => $this->config['huawei_sms_secret']
-                ]
-            ]
+            'driverConfig' => $sms_list['code']
         ];
+        $config['driverConfig']['sms_type'] = $sms_type[$this->config['sms_type']]['code'];
 
         $data = [];
         /* 手动补充 start */

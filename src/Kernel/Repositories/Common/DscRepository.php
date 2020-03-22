@@ -58,6 +58,46 @@ class DscRepository extends Repository
     }
 
     /**
+     * 获取店铺二级域名跨域关键值
+     *
+     * @param string $back_act 跳转回调
+     * @param string $exp 分隔符
+     * @param string $strpos 匹配的字符串
+     * @return mixed
+     */
+    public function isJsonp($back_act = '', $exp = '|', $strpos = 'is_jsonp')
+    {
+        $callback = explode($exp, $back_act);
+        $data = [];
+        foreach ($callback as $key => $val) {
+            $item = explode('=', $val);
+            $data[$item[0]] = $item[1];
+        }
+        if (count($callback) <= 1) {
+            return 0;
+        } else {
+            if ($strpos === 'is_jsonp') {
+                return 1;
+            } else {
+                if (key_exists($strpos, $data)) {
+                    return $data[$strpos];
+                } else {
+                    return 0;
+                }
+            }
+        }
+    }
+
+    /**
+     * 获取店铺二级域名
+     * @param $seller_id 商家ID
+     */
+    public function sellerDomain($seller_id)
+    {
+        return false;
+    }
+
+    /**
      * 转浮点值，保存两位
      */
     public function changeFloat($float = 0)
@@ -1172,6 +1212,43 @@ class DscRepository extends Repository
                         OrderGoods::where('rec_id', $val['rec_id'])
                             ->update([
                                 'goods_bonus' => $bonusTotal
+                            ]);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 核对均摊优惠券商品金额是否大于订单红包金额
+     *
+     * @param array $coupons_list
+     * @param int $orderCoupons
+     * @param int $goods_coupons
+     */
+    public function collateOrderGoodsCoupons($coupons_list = [], $orderCoupons = 0, $goods_coupons = 0)
+    {
+        if ($orderCoupons > 0) {
+            $couponsCount = count($coupons_list);
+            if ($goods_coupons > $orderCoupons) {
+                /* 商品均摊优惠券总额大于订单优惠券金额 */
+                foreach ($coupons_list as $idx => $val) {
+                    if ($idx == ($couponsCount - 1)) {
+                        $couponsTotal = $val['goods_coupons'] - ($goods_coupons - $orderCoupons);
+                        OrderGoods::where('rec_id', $val['rec_id'])
+                            ->update([
+                                'goods_coupons' => $couponsTotal
+                            ]);
+                    }
+                }
+            } elseif ($goods_coupons < $orderCoupons) {
+                /* 商品均摊红包总额小于订单红包金额 */
+                foreach ($coupons_list as $idx => $val) {
+                    if ($idx == ($couponsCount - 1)) {
+                        $couponsTotal = $val['goods_coupons'] + ($orderCoupons - $goods_coupons);
+                        OrderGoods::where('rec_id', $val['rec_id'])
+                            ->update([
+                                'goods_coupons' => $couponsTotal
                             ]);
                     }
                 }
