@@ -136,11 +136,11 @@ class AliOssRepository extends Repository
 
                 foreach ($cloudList as $key => $val) {
                     if ($val) {
-                        $data = [
+                        $file_list = [
                             'prefix' => $val
                         ];
 
-                        $list[] = $ossClient->listObjects($data['bucket'], $data);
+                        $list[] = $ossClient->listObjects($data['bucket'], $file_list);
                     }
                 }
             }
