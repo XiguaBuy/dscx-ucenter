@@ -195,7 +195,7 @@ class AliOssRepository extends Repository
                 $http = $this->baseRepository->dscHttp();
                 $regional = substr($res['regional'], 0, 2);
 
-                if ($regional == 'us' || $regional == 'ap') {
+                if ($regional == 'us' || $regional == 'ap' || $regional == 'eu') {
                     $res['outside_site'] = $http . $res['bucket'] . ".oss-" . $res['regional'] . ".aliyuncs.com";
                     $res['inside_site'] = $http . $res['bucket'] . ".oss-" . $res['regional'] . "-internal.aliyuncs.com";
                 } else {
@@ -206,7 +206,7 @@ class AliOssRepository extends Repository
                 if (empty($res['endpoint'])) {
                     $res['endpoint'] = $res['outside_site'] . "/";
 
-                    if ($regional == 'us' || $regional == 'ap') {
+                    if ($regional == 'us' || $regional == 'ap' || $regional == 'eu') {
                         $res['outside_site'] = "oss-" . $res['regional'] . ".aliyuncs.com";
                     } else {
                         $res['outside_site'] = "oss-cn-" . $res['regional'] . ".aliyuncs.com";
