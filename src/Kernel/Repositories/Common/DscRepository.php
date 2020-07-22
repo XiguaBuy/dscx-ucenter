@@ -1335,11 +1335,16 @@ class DscRepository extends Repository
      * 获取站点访问地址[域名]
      *
      * @param string $str
+     * @param string $domain
      * @return string
      */
-    public function dscUrl($str = '')
+    public function dscUrl($str = '', $domain = '')
     {
-        $url = request()->root() . '/' . $str;
+        if ($domain != '') {
+            $url = $domain . '/' . $str;
+        } else {
+            $url = request()->root() . '/' . $str;
+        }
 
         if (strpos($url, 'index.php/') !== false) {
             $url = str_replace('index.php/', '', $url);
